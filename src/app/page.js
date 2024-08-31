@@ -3,14 +3,17 @@
 import Image from "next/image";
 import { useState, useRef } from "react";
 import { BsSoundwave } from "react-icons/bs";
-import { FaStop } from "react-icons/fa6";
+import { FaPause, FaPlay, FaStop } from "react-icons/fa6";
 import { FaMicrophoneAlt } from "react-icons/fa";
 
 const HomePage = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
+  const [isPaused, setIsPaused] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const audioRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const startRecording = async () => {
     try {
@@ -42,6 +45,47 @@ const HomePage = () => {
     setIsRecording(false);
   };
 
+  const pauseRecording = () => {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "recording"
+    ) {
+      mediaRecorderRef.current.pause();
+      setIsPaused(true);
+    }
+  };
+
+  const resumeRecording = () => {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "paused"
+    ) {
+      mediaRecorderRef.current.resume();
+      setIsPaused(false);
+    }
+  };
+
+  const handleRecordingControl = () => {
+    if (isRecording) {
+      if (isPaused) {
+        resumeRecording();
+      } else {
+        pauseRecording();
+      }
+    } else {
+      startRecording();
+    }
+  };
+
+  const togglePlayPause = () => {
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
   return (
     <section className="px-5 h-[100vh]">
       <div className="p-2 flex justify-center py-8">
@@ -56,8 +100,8 @@ const HomePage = () => {
         </h1>
       </div>
 
-      <div className="h-[70%] flex justify-center flex-col border items-center w-full ">
-        <div className="md:w-[50%] w-full border">
+      <div className="h-[70%] flex justify-center flex-col items-center w-full ">
+        <div className="md:w-[20%] w-full">
           <Image
             src="/soundwave.gif"
             width={100}
@@ -67,30 +111,41 @@ const HomePage = () => {
           />
         </div>
 
-        <div className="my-10">
+        <div className="my-5 w-[20%]">
           {audioUrl && (
             <div className="text-center">
               <h3 className="py-2">Your Audio</h3>
-              <audio controls src={audioUrl} />
+              <audio
+                ref={audioRef}
+                controls
+                src={audioUrl}
+                className="w-full"
+              />
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex justify-center text-[2rem]">
+      <div className="flex justify-center text-[2rem] items-center">
         <button
-          className="p-2 bg-black text-white rounded-md"
-          onClick={isRecording ? stopRecording : startRecording}
+          className="p-2 bg-black text-white rounded-md mx-2"
+          onClick={handleRecordingControl}
         >
           {isRecording ? (
-            <span className="">
-              <FaStop />
-            </span>
+            isPaused ? (
+              <FaPlay />
+            ) : (
+              <FaPause />
+            )
           ) : (
-            <span>
-              <FaMicrophoneAlt />
-            </span>
+            <FaMicrophoneAlt />
           )}
+        </button>
+        <button
+          onClick={stopRecording}
+          className="p-2 bg-black text-white rounded-md mx-2"
+        >
+          <FaStop />
         </button>
       </div>
     </section>
